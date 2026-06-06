@@ -4,8 +4,11 @@ import { join } from 'path';
 import { shellJson } from '../utils/shell';
 import { makeOk, makeErr, Achievement, AchievementsData, Result } from '../types';
 
-const REPORTS_DIR = join(homedir(), 'clawbot', 'reports');
-const DEFAULT_REPOS = ['ecimionatto/daily-train-app', 'ecimionatto/crescendo-app'];
+function getReportsDir(): string {
+  const env = process.env.MC_REPORTS_DIR;
+  if (env) return env.replace(/^~/, homedir());
+  return join(homedir(), 'clawbot', 'reports');
+}
 
 interface GhMergedPR {
   number: number;
@@ -33,15 +36,16 @@ export function parseDateFromReportFilename(filename: string): string {
 }
 
 async function listRecentReports(): Promise<AchievementsData['recentReports']> {
+  const reportsDir = getReportsDir();
   try {
-    const files = await readdir(REPORTS_DIR);
+    const files = await readdir(reportsDir);
     const mdFiles = files.filter(f => f.endsWith('.md')).sort().reverse().slice(0, 20);
     const reports: AchievementsData['recentReports'] = [];
     for (const file of mdFiles) {
       const date = parseDateFromReportFilename(file);
       let theme: string | undefined;
       try {
-        const content = await readFile(join(REPORTS_DIR, file), 'utf8');
+        const content = await readFile(join(reportsDir, file), 'utf8');
         theme = extractThemeFromReport(content);
       } catch {
         // can't read file, that's fine
@@ -74,7 +78,7 @@ async function fetchMergedPRs(repo: string): Promise<Achievement[]> {
 
 export async function fetchAchievements(): Promise<Result<AchievementsData>> {
   try {
-    const repos = (process.env.REPOS ?? DEFAULT_REPOS.join(',')).split(',').map(r => r.trim()).filter(Boolean);
+    const repos = (process.env.REPOS ?? '').split(',').map(r => r.trim()).filter(Boolean);
     const [recentReports, ...prArrays] = await Promise.all([
       listRecentReports(),
       ...repos.map(fetchMergedPRs),

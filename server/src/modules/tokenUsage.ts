@@ -3,8 +3,13 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { makeOk, makeErr, DayUsage, TokenUsageData, Result } from '../types';
 
-const JSONL_DIR = join(homedir(), '.claude', 'projects', '-home-ecimio-clawbot-workspace');
 const MAX_FILES = 50;
+
+function getJsonlDir(): string | null {
+  const env = process.env.MC_CLAUDE_PROJECT_DIR;
+  if (env) return env.replace(/^~/, homedir());
+  return null;
+}
 
 interface MessageUsage {
   input_tokens?: number;
@@ -75,6 +80,10 @@ export function aggregateTokensByDay(
 }
 
 export async function fetchTokenUsage(): Promise<Result<TokenUsageData>> {
+  const JSONL_DIR = getJsonlDir();
+  if (!JSONL_DIR) {
+    return makeErr('MC_CLAUDE_PROJECT_DIR not configured — set it to your Claude project directory path (e.g. ~/.claude/projects/-home-yourname-workspace)');
+  }
   try {
     const files = await readdir(JSONL_DIR);
     const jsonlFiles = files.filter(f => f.endsWith('.jsonl'));

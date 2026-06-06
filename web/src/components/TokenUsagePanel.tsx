@@ -25,7 +25,7 @@ export function TokenUsagePanel({ result }: Props) {
       {data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Totals */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div className="token-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             <Stat label="Input" value={fmt(data.totalInputTokens)} color={colors.data.blue} />
             <Stat label="Output" value={fmt(data.totalOutputTokens)} color={colors.data.green} />
             <Stat label="Cache Read" value={fmt(data.totalCacheReadTokens)} color={colors.data.amber} />

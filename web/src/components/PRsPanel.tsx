@@ -47,7 +47,7 @@ export function PRsPanel({ result }: Props) {
 
 function PRRow({ pr }: { pr: PullRequest }) {
   return (
-    <div style={{
+    <div className="pr-row" style={{
       display: 'grid',
       gridTemplateColumns: '80px 1fr 60px 70px',
       gap: 8,

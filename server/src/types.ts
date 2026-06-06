@@ -99,3 +99,16 @@ export interface TokenUsageData {
   filesScanned: number;
   note: string;
 }
+
+export interface ResearchReport {
+  source: string;
+  theme: string;
+  date: string;
+  findings: string[];
+  file: string;
+}
+
+export interface ResearchData {
+  reports: ResearchReport[];
+  total: number;
+}
