@@ -1,0 +1,101 @@
+export type Result<T> =
+  | { ok: true; data: T; fetchedAt: string }
+  | { ok: false; error: string; fetchedAt: string };
+
+export function makeOk<T>(data: T): Result<T> {
+  return { ok: true, data, fetchedAt: new Date().toISOString() };
+}
+
+export function makeErr<T>(error: string): Result<T> {
+  return { ok: false, error, fetchedAt: new Date().toISOString() };
+}
+
+export interface AgentHealthData {
+  gatewayStatus: 'up' | 'down' | 'unknown';
+  uptime?: string;
+  model: string;
+  fallbacks: string[];
+  port: number;
+  connectivityProbe?: string;
+  rawStatus?: string;
+}
+
+export interface PullRequest {
+  number: number;
+  title: string;
+  state: 'open' | 'merged' | 'closed';
+  repo: string;
+  author: string;
+  updatedAt: string;
+  ciStatus: 'success' | 'failure' | 'pending' | 'none' | 'unknown';
+  url: string;
+  isDraft: boolean;
+}
+
+export interface WorkflowRun {
+  id: number;
+  name: string;
+  workflowName: string;
+  status: string;
+  conclusion: string | null;
+  startedAt: string;
+  updatedAt: string;
+  durationSeconds: number | null;
+  repo: string;
+  event: string;
+}
+
+export interface CostData {
+  source: 'api' | 'estimate' | 'unavailable';
+  totalMinutesUsed?: number;
+  includedMinutes?: number;
+  totalPaidMinutesUsed?: number;
+  estimatedUsdCost?: number;
+  note: string;
+}
+
+export interface Achievement {
+  type: 'merged_pr' | 'report';
+  title: string;
+  date: string;
+  repo?: string;
+  prNumber?: number;
+  url?: string;
+  author?: string;
+}
+
+export interface AchievementsData {
+  items: Achievement[];
+  recentReports: Array<{ name: string; date: string; theme?: string }>;
+}
+
+export interface WorkerLog {
+  name: string;
+  logFile: string;
+  lastLines: string[];
+  modifiedAt: string;
+  sizeBytes: number;
+}
+
+export interface SubagentsData {
+  workers: WorkerLog[];
+  note: string;
+}
+
+export interface DayUsage {
+  date: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+}
+
+export interface TokenUsageData {
+  days: DayUsage[];
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheWriteTokens: number;
+  filesScanned: number;
+  note: string;
+}
