@@ -64,7 +64,7 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
+      <div className="mc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
         {/* Row 1: Agent Health, Cost, spacer */}
         <div style={{ gridColumn: 'span 3' }}>
           <AgentHealthPanel result={data?.agentHealth ?? null} />

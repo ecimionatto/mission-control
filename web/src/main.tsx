@@ -13,6 +13,12 @@ style.textContent = cssVariables + `
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-page); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* Mobile: collapse the 12-col dashboard grid to a single full-width column */
+  @media (max-width: 820px) {
+    body { font-size: 14px; }
+    .mc-grid { grid-template-columns: 1fr !important; }
+    .mc-grid > * { grid-column: 1 / -1 !important; min-width: 0 !important; }
+  }
 `;
 document.head.appendChild(style);
 
