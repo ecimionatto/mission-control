@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchDashboard, getStoredToken, setStoredToken } from './api';
 import type { DashboardData } from './api';
 import { AgentHealthPanel } from './components/AgentHealthPanel';
@@ -8,6 +8,7 @@ import { CostPanel } from './components/CostPanel';
 import { AchievementsPanel } from './components/AchievementsPanel';
 import { SubagentsPanel } from './components/SubagentsPanel';
 import { TokenUsagePanel } from './components/TokenUsagePanel';
+import { ResearchPanel } from './components/ResearchPanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -48,55 +49,59 @@ function useAutoRefresh() {
 
 export default function App() {
   const { data, loading, error, lastRefresh, needsToken, refresh } = useAutoRefresh();
-  const [tokenInput, setTokenInput] = useState('');
 
   if (needsToken) {
     return <TokenGate onSubmit={token => { setStoredToken(token); refresh(); }} />;
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', padding: '16px 20px 32px' }}>
-      <Header lastRefresh={lastRefresh} loading={loading} onRefresh={refresh} />
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 20px 32px' }}>
+        <Header lastRefresh={lastRefresh} loading={loading} onRefresh={refresh} />
 
-      {error && (
-        <div style={{ background: '#1a0000', border: '1px solid var(--error)', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: 'var(--error)' }}>
-          ⚠ {error}
-        </div>
-      )}
+        {error && (
+          <div style={{ background: '#1a0000', border: '1px solid var(--error)', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: 'var(--error)' }}>
+            ⚠ {error}
+          </div>
+        )}
 
-      <div className="mc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
-        {/* Row 1: Agent Health, Cost, spacer */}
-        <div style={{ gridColumn: 'span 3' }}>
-          <AgentHealthPanel result={data?.agentHealth ?? null} />
-        </div>
-        <div style={{ gridColumn: 'span 3' }}>
-          <CostPanel result={data?.cost ?? null} />
-        </div>
-        <div style={{ gridColumn: 'span 6' }}>
-          <TokenUsagePanel result={data?.tokenUsage ?? null} />
+        <div className="mc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
+          {/* Row 1: Agent Health, Cost, Token Usage */}
+          <div style={{ gridColumn: 'span 3' }}>
+            <AgentHealthPanel result={data?.agentHealth ?? null} />
+          </div>
+          <div style={{ gridColumn: 'span 3' }}>
+            <CostPanel result={data?.cost ?? null} />
+          </div>
+          <div style={{ gridColumn: 'span 6' }}>
+            <TokenUsagePanel result={data?.tokenUsage ?? null} />
+          </div>
+
+          {/* Row 2: PRs + Workflows */}
+          <div style={{ gridColumn: 'span 6' }}>
+            <PRsPanel result={data?.prs ?? null} />
+          </div>
+          <div style={{ gridColumn: 'span 6' }}>
+            <WorkflowsPanel result={data?.workflows ?? null} />
+          </div>
+
+          {/* Row 3: Achievements + Subagents */}
+          <div style={{ gridColumn: 'span 6' }}>
+            <AchievementsPanel result={data?.achievements ?? null} />
+          </div>
+          <div style={{ gridColumn: 'span 6' }}>
+            <SubagentsPanel result={data?.subagents ?? null} />
+          </div>
+
+          {/* Row 4: Research (full width) */}
+          <div style={{ gridColumn: 'span 12' }}>
+            <ResearchPanel result={data?.research ?? null} />
+          </div>
         </div>
 
-        {/* Row 2: PRs + Workflows */}
-        <div style={{ gridColumn: 'span 6' }}>
-          <PRsPanel result={data?.prs ?? null} />
+        <div style={{ marginTop: 24, textAlign: 'center', fontSize: 10, color: 'var(--text-muted)' }}>
+          Mission Control · LAN-only · auto-refresh every {POLL_INTERVAL_MS / 1000}s
         </div>
-        <div style={{ gridColumn: 'span 6' }}>
-          <WorkflowsPanel result={data?.workflows ?? null} />
-        </div>
-
-        {/* Row 3: Achievements */}
-        <div style={{ gridColumn: 'span 6' }}>
-          <AchievementsPanel result={data?.achievements ?? null} />
-        </div>
-
-        {/* Row 3 right: Subagents */}
-        <div style={{ gridColumn: 'span 6' }}>
-          <SubagentsPanel result={data?.subagents ?? null} />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 24, textAlign: 'center', fontSize: 10, color: 'var(--text-muted)' }}>
-        Mission Control · LAN-only · auto-refresh every {POLL_INTERVAL_MS / 1000}s
       </div>
     </div>
   );
@@ -110,8 +115,17 @@ function Header({ lastRefresh, loading, onRefresh }: { lastRefresh: Date | null;
   }, []);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 16,
+      borderBottom: '1px solid var(--border)',
+      paddingBottom: 12,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
           Mission Control
         </span>
@@ -119,7 +133,7 @@ function Header({ lastRefresh, loading, onRefresh }: { lastRefresh: Date | null;
           {now.toLocaleTimeString()}
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         {lastRefresh && (
           <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             last refresh {lastRefresh.toLocaleTimeString()}
@@ -134,8 +148,10 @@ function Header({ lastRefresh, loading, onRefresh }: { lastRefresh: Date | null;
             borderRadius: 4,
             color: loading ? 'var(--text-muted)' : 'var(--text-secondary)',
             cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: 11,
-            padding: '3px 10px',
+            fontSize: 13,
+            padding: '10px 16px',
+            minHeight: 40,
+            minWidth: 80,
           }}
         >
           {loading ? '…' : '↺ Refresh'}
@@ -150,7 +166,7 @@ function TokenGate({ onSubmit }: { onSubmit: (token: string) => void }) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)' }}>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '32px 40px', width: 340 }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '32px 40px', width: 340, maxWidth: 'calc(100vw - 48px)' }}>
         <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 20, color: 'var(--text-primary)' }}>
           Mission Control
         </div>
@@ -174,6 +190,7 @@ function TokenGate({ onSubmit }: { onSubmit: (token: string) => void }) {
             padding: '8px 10px',
             outline: 'none',
             marginBottom: 12,
+            minHeight: 40,
           }}
         />
         <button
@@ -187,7 +204,8 @@ function TokenGate({ onSubmit }: { onSubmit: (token: string) => void }) {
             cursor: 'pointer',
             fontSize: 13,
             fontWeight: 600,
-            padding: '9px',
+            padding: '11px',
+            minHeight: 44,
           }}
         >
           Unlock

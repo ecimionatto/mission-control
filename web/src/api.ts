@@ -94,6 +94,19 @@ export interface TokenUsageData {
   note: string;
 }
 
+export interface ResearchReport {
+  source: string;
+  theme: string;
+  date: string;
+  findings: string[];
+  file: string;
+}
+
+export interface ResearchData {
+  reports: ResearchReport[];
+  total: number;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -102,6 +115,7 @@ export interface DashboardData {
   achievements: ApiResult<AchievementsData>;
   subagents: ApiResult<SubagentsData>;
   tokenUsage: ApiResult<TokenUsageData>;
+  research: ApiResult<ResearchData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';

@@ -7,6 +7,7 @@ import { fetchCost } from './modules/githubCost';
 import { fetchAchievements } from './modules/achievements';
 import { fetchSubagents } from './modules/subagents';
 import { fetchTokenUsage } from './modules/tokenUsage';
+import { fetchResearch } from './modules/research';
 
 const PORT = parseInt(process.env.PORT ?? '4317', 10);
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN;
@@ -34,6 +35,7 @@ const modules = {
   achievements: withCache('achievements', fetchAchievements),
   subagents: withCache('subagents', fetchSubagents),
   tokenUsage: withCache('tokenUsage', fetchTokenUsage),
+  research: withCache('research', fetchResearch),
 };
 
 const app = express();
@@ -59,7 +61,7 @@ app.use((_req, res, next) => {
 
 // Aggregate endpoint — single round-trip for the dashboard
 app.get('/api/all', async (_req, res) => {
-  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage] =
+  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research] =
     await Promise.all([
       modules.agentHealth(),
       modules.prs(),
@@ -68,8 +70,9 @@ app.get('/api/all', async (_req, res) => {
       modules.achievements(),
       modules.subagents(),
       modules.tokenUsage(),
+      modules.research(),
     ]);
-  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage });
+  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research });
 });
 
 app.get('/api/agent-health', async (_req, res) => res.json(await modules.agentHealth()));
@@ -79,6 +82,7 @@ app.get('/api/cost', async (_req, res) => res.json(await modules.cost()));
 app.get('/api/achievements', async (_req, res) => res.json(await modules.achievements()));
 app.get('/api/subagents', async (_req, res) => res.json(await modules.subagents()));
 app.get('/api/token-usage', async (_req, res) => res.json(await modules.tokenUsage()));
+app.get('/api/research', async (_req, res) => res.json(await modules.research()));
 
 // Serve web app in production
 const WEB_DIST = path.join(__dirname, '..', '..', 'web', 'dist');
