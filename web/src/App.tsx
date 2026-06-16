@@ -9,6 +9,7 @@ import { AchievementsPanel } from './components/AchievementsPanel';
 import { SubagentsPanel } from './components/SubagentsPanel';
 import { TokenUsagePanel } from './components/TokenUsagePanel';
 import { ResearchPanel } from './components/ResearchPanel';
+import { AiRatioPanel } from './components/AiRatioPanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -66,14 +67,17 @@ export default function App() {
         )}
 
         <div className="mc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
-          {/* Row 1: Agent Health, Cost, Token Usage */}
+          {/* Row 1: Agent Health, Cost, AI Ratio, Token Usage */}
           <div style={{ gridColumn: 'span 3' }}>
             <AgentHealthPanel result={data?.agentHealth ?? null} />
           </div>
           <div style={{ gridColumn: 'span 3' }}>
             <CostPanel result={data?.cost ?? null} />
           </div>
-          <div style={{ gridColumn: 'span 6' }}>
+          <div style={{ gridColumn: 'span 3' }}>
+            <AiRatioPanel result={data?.aiRatio ?? null} />
+          </div>
+          <div style={{ gridColumn: 'span 3' }}>
             <TokenUsagePanel result={data?.tokenUsage ?? null} />
           </div>
 

@@ -107,6 +107,19 @@ export interface ResearchData {
   total: number;
 }
 
+export interface RepoRatio {
+  repo: string;
+  total: number;
+  aiAuthored: number;
+  ratio: number;
+}
+
+export interface AiRatioData {
+  repos: RepoRatio[];
+  overall: { total: number; aiAuthored: number; ratio: number };
+  windowDays: number;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -116,6 +129,7 @@ export interface DashboardData {
   subagents: ApiResult<SubagentsData>;
   tokenUsage: ApiResult<TokenUsageData>;
   research: ApiResult<ResearchData>;
+  aiRatio: ApiResult<AiRatioData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';
