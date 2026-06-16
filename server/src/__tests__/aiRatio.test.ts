@@ -63,20 +63,35 @@ describe('isAiAuthored', () => {
     })).toBe(true);
   });
 
-  it('returns true when Co-Authored-By trailer email contains "claude"', () => {
+  it('returns true when a Co-Authored-By trailer is a GitHub App [bot]', () => {
     expect(isAiAuthored({
       hash: 'abc',
       authorEmail: 'user@example.com',
-      body: 'feat: thing\n\nCo-Authored-By: Claude Code <claude@bot.example.com>\n',
+      body: 'feat: thing\n\nCo-Authored-By: Louis Agent <12345+louis-agent[bot]@users.noreply.github.com>\n',
     })).toBe(true);
   });
 
-  it('returns true when author email contains "bot"', () => {
+  it('returns true when author email is a GitHub App [bot]', () => {
     expect(isAiAuthored({
       hash: 'abc',
       authorEmail: 'github-actions[bot]@users.noreply.github.com',
       body: 'chore: auto-update',
     })).toBe(true);
+  });
+
+  it('does NOT false-positive on human emails containing "claude"/"bot" substrings', () => {
+    // claudia@, talbot@, abbott@ are real human addresses — must not match.
+    for (const email of ['claudia@example.com', 'talbot@example.com', 'abbott@example.com']) {
+      expect(isAiAuthored({ hash: 'abc', authorEmail: email, body: 'feat: x' })).toBe(false);
+    }
+  });
+
+  it('does NOT false-positive when "claude" appears only in prose', () => {
+    expect(isAiAuthored({
+      hash: 'abc',
+      authorEmail: 'edson@example.com',
+      body: 'fix: correct the claude integration prompt wording',
+    })).toBe(false);
   });
 
   it('returns false for plain human commit with no trailers', () => {

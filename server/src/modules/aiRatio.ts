@@ -19,7 +19,11 @@ export interface CommitRecord {
   body: string;
 }
 
-const BOT_PATTERN = /noreply@anthropic\.com|claude|bot/i;
+// Match AI/bot authorship by EMAIL only, precisely: the Claude co-author
+// trailer email (noreply@anthropic.com) or a GitHub App "[bot]" email. We do
+// NOT match bare "claude"/"bot" substrings — those false-positive on real human
+// addresses like claudia@, talbot@, abbott@ and would over-count.
+const BOT_PATTERN = /noreply@anthropic\.com|\[bot\]/i;
 
 export function isAiAuthored(commit: CommitRecord): boolean {
   if (BOT_PATTERN.test(commit.authorEmail)) return true;
