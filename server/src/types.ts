@@ -112,3 +112,16 @@ export interface ResearchData {
   reports: ResearchReport[];
   total: number;
 }
+
+export interface RepoRatio {
+  repo: string;
+  total: number;
+  aiAuthored: number;
+  ratio: number;
+}
+
+export interface AiRatioData {
+  repos: RepoRatio[];
+  overall: { total: number; aiAuthored: number; ratio: number };
+  windowDays: number;
+}
