@@ -25,7 +25,7 @@ async function expandGlob(pattern: string): Promise<string[]> {
   }
 }
 
-async function getLogPaths(): Promise<string[]> {
+export async function getLogPaths(): Promise<string[]> {
   const globsEnv = process.env.MC_WORKER_LOG_GLOB ?? DEFAULT_LOG_GLOBS;
   const patterns = globsEnv.split(',').map(p => p.trim()).filter(Boolean);
   const all = new Set<string>();

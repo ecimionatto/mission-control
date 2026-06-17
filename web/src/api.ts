@@ -82,6 +82,14 @@ export interface DayUsage {
   outputTokens: number;
   cacheReadTokens: number;
   cacheWriteTokens: number;
+  costUsd?: number;
+}
+
+export interface CostSpikeResult {
+  spike: boolean;
+  latestUsd: number;
+  baselineUsd: number;
+  ratio: number;
 }
 
 export interface TokenUsageData {
@@ -90,7 +98,26 @@ export interface TokenUsageData {
   totalOutputTokens: number;
   totalCacheReadTokens: number;
   totalCacheWriteTokens: number;
+  totalCostUsd: number;
+  costSpike: CostSpikeResult;
   filesScanned: number;
+  note: string;
+}
+
+export type WorkerStatus = 'active' | 'idle' | 'stuck';
+
+export interface TracedWorker {
+  name: string;
+  logFile: string;
+  modifiedAt: string;
+  status: WorkerStatus;
+  retryCount: number;
+  reason: string;
+}
+
+export interface FleetTracingData {
+  workers: TracedWorker[];
+  stuckCount: number;
   note: string;
 }
 
@@ -130,6 +157,7 @@ export interface DashboardData {
   tokenUsage: ApiResult<TokenUsageData>;
   research: ApiResult<ResearchData>;
   aiRatio: ApiResult<AiRatioData>;
+  fleetTracing: ApiResult<FleetTracingData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';

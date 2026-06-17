@@ -94,7 +94,7 @@ export default function App() {
             <AchievementsPanel result={data?.achievements ?? null} />
           </div>
           <div style={{ gridColumn: 'span 6' }}>
-            <SubagentsPanel result={data?.subagents ?? null} />
+            <SubagentsPanel result={data?.subagents ?? null} fleetTracing={data?.fleetTracing ?? null} />
           </div>
 
           {/* Row 4: Research (full width) */}
