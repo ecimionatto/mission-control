@@ -9,6 +9,7 @@ import { fetchSubagents } from './modules/subagents';
 import { fetchTokenUsage } from './modules/tokenUsage';
 import { fetchResearch } from './modules/research';
 import { fetchAiRatio } from './modules/aiRatio';
+import { fetchFleetTracing } from './modules/fleetTracing';
 
 const PORT = parseInt(process.env.PORT ?? '4317', 10);
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN;
@@ -38,6 +39,7 @@ const modules = {
   tokenUsage: withCache('tokenUsage', fetchTokenUsage),
   research: withCache('research', fetchResearch),
   aiRatio: withCache('aiRatio', fetchAiRatio),
+  fleetTracing: withCache('fleetTracing', fetchFleetTracing),
 };
 
 const app = express();
@@ -63,7 +65,7 @@ app.use((_req, res, next) => {
 
 // Aggregate endpoint — single round-trip for the dashboard
 app.get('/api/all', async (_req, res) => {
-  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio] =
+  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing] =
     await Promise.all([
       modules.agentHealth(),
       modules.prs(),
@@ -74,8 +76,9 @@ app.get('/api/all', async (_req, res) => {
       modules.tokenUsage(),
       modules.research(),
       modules.aiRatio(),
+      modules.fleetTracing(),
     ]);
-  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio });
+  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing });
 });
 
 app.get('/api/agent-health', async (_req, res) => res.json(await modules.agentHealth()));
@@ -87,6 +90,7 @@ app.get('/api/subagents', async (_req, res) => res.json(await modules.subagents(
 app.get('/api/token-usage', async (_req, res) => res.json(await modules.tokenUsage()));
 app.get('/api/research', async (_req, res) => res.json(await modules.research()));
 app.get('/api/ai-ratio', async (_req, res) => res.json(await modules.aiRatio()));
+app.get('/api/fleet-tracing', async (_req, res) => res.json(await modules.fleetTracing()));
 
 // Serve web app in production
 const WEB_DIST = path.join(__dirname, '..', '..', 'web', 'dist');

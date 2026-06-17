@@ -1,9 +1,51 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
-import { makeOk, makeErr, DayUsage, TokenUsageData, Result } from '../types';
+import { makeOk, makeErr, DayUsage, TokenUsageData, CostSpikeResult, Result } from '../types';
 
 const MAX_FILES = 50;
+
+// verify against current Anthropic pricing — https://www.anthropic.com/pricing
+export interface ModelRates {
+  input: number;     // USD per 1M tokens
+  output: number;    // USD per 1M tokens
+  cacheRead: number; // USD per 1M tokens (= input * 0.1)
+  cacheWrite: number; // USD per 1M tokens (= input * 1.25)
+}
+
+export const PRICING: Record<string, ModelRates> = {
+  opus:   { input: 15,  output: 75, cacheRead: 1.5,    cacheWrite: 18.75 },
+  sonnet: { input: 3,   output: 15, cacheRead: 0.3,    cacheWrite: 3.75  },
+  haiku:  { input: 1,   output: 5,  cacheRead: 0.1,    cacheWrite: 1.25  },
+};
+
+export function dayCostUsd(day: DayUsage, rates: ModelRates = PRICING.opus): number {
+  const M = 1_000_000;
+  return (
+    (day.inputTokens / M) * rates.input +
+    (day.outputTokens / M) * rates.output +
+    (day.cacheReadTokens / M) * rates.cacheRead +
+    (day.cacheWriteTokens / M) * rates.cacheWrite
+  );
+}
+
+export function detectCostSpike(days: { date: string; costUsd: number }[]): CostSpikeResult {
+  const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted[sorted.length - 1];
+  if (!latest || sorted.length < 3) {
+    return { spike: false, latestUsd: latest?.costUsd ?? 0, baselineUsd: 0, ratio: 0 };
+  }
+  // Up to 7 days immediately before the latest
+  const priorDays = sorted.slice(-8, -1);
+  const baselineUsd = priorDays.reduce((s, d) => s + d.costUsd, 0) / priorDays.length;
+  const ratio = baselineUsd > 0 ? latest.costUsd / baselineUsd : 0;
+  return {
+    spike: baselineUsd > 0 && ratio > 1.5,
+    latestUsd: latest.costUsd,
+    baselineUsd,
+    ratio,
+  };
+}
 
 function getJsonlDir(): string | null {
   const env = process.env.MC_CLAUDE_PROJECT_DIR;
@@ -130,11 +172,16 @@ export async function fetchTokenUsage(): Promise<Result<TokenUsageData>> {
       })
     );
 
-    const days = Object.values(combined).sort((a, b) => a.date.localeCompare(b.date));
+    const days = Object.values(combined)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map(d => ({ ...d, costUsd: dayCostUsd(d) }));
+
     const totalInputTokens = days.reduce((s, d) => s + d.inputTokens, 0);
     const totalOutputTokens = days.reduce((s, d) => s + d.outputTokens, 0);
     const totalCacheReadTokens = days.reduce((s, d) => s + d.cacheReadTokens, 0);
     const totalCacheWriteTokens = days.reduce((s, d) => s + d.cacheWriteTokens, 0);
+    const totalCostUsd = days.reduce((s, d) => s + (d.costUsd ?? 0), 0);
+    const costSpike = detectCostSpike(days.map(d => ({ date: d.date, costUsd: d.costUsd ?? 0 })));
 
     return makeOk({
       days,
@@ -142,6 +189,8 @@ export async function fetchTokenUsage(): Promise<Result<TokenUsageData>> {
       totalOutputTokens,
       totalCacheReadTokens,
       totalCacheWriteTokens,
+      totalCostUsd,
+      costSpike,
       filesScanned: sorted.length,
       note: `Scanned ${sorted.length} of ${jsonlFiles.length} JSONL files (most recent). Usage extracted from assistant message headers.`,
     });
