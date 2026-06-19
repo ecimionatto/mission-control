@@ -1,9 +1,38 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
-import { makeOk, makeErr, DayUsage, TokenUsageData, CostSpikeResult, Result } from '../types';
+import { makeOk, makeErr, DayUsage, TokenUsageData, CostSpikeResult, CacheEfficiency, Result } from '../types';
 
 const MAX_FILES = 50;
+
+/** Anthropic break-even point: cache amortizes cost at this many reads per write. */
+export const CACHE_BREAKEVEN_RATIO = 1.4;
+
+/**
+ * Fraction of all prompt tokens served from cache (0–1).
+ * Denominator includes cache reads + writes + uncached input tokens.
+ */
+export function computeCacheHitRate(
+  cacheReadTokens: number,
+  cacheWriteTokens: number,
+  inputTokens: number,
+): number {
+  const denominator = cacheReadTokens + cacheWriteTokens + inputTokens;
+  if (denominator === 0) return 0;
+  return cacheReadTokens / denominator;
+}
+
+/**
+ * Cache reads per write. Returns null when there are no writes (avoids divide-by-zero).
+ * Values below CACHE_BREAKEVEN_RATIO (1.4) indicate cache writes aren't amortizing.
+ */
+export function computeCacheReadWriteRatio(
+  cacheReadTokens: number,
+  cacheWriteTokens: number,
+): number | null {
+  if (cacheWriteTokens === 0) return null;
+  return cacheReadTokens / cacheWriteTokens;
+}
 
 // verify against current Anthropic pricing — https://www.anthropic.com/pricing
 export interface ModelRates {
@@ -183,6 +212,11 @@ export async function fetchTokenUsage(): Promise<Result<TokenUsageData>> {
     const totalCostUsd = days.reduce((s, d) => s + (d.costUsd ?? 0), 0);
     const costSpike = detectCostSpike(days.map(d => ({ date: d.date, costUsd: d.costUsd ?? 0 })));
 
+    const cacheEfficiency: CacheEfficiency = {
+      cacheHitRate: computeCacheHitRate(totalCacheReadTokens, totalCacheWriteTokens, totalInputTokens),
+      cacheReadWriteRatio: computeCacheReadWriteRatio(totalCacheReadTokens, totalCacheWriteTokens),
+    };
+
     return makeOk({
       days,
       totalInputTokens,
@@ -191,6 +225,7 @@ export async function fetchTokenUsage(): Promise<Result<TokenUsageData>> {
       totalCacheWriteTokens,
       totalCostUsd,
       costSpike,
+      cacheEfficiency,
       filesScanned: sorted.length,
       note: `Scanned ${sorted.length} of ${jsonlFiles.length} JSONL files (most recent). Usage extracted from assistant message headers.`,
     });

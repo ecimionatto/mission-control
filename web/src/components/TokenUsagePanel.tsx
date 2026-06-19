@@ -1,6 +1,6 @@
 import React from 'react';
 import { Panel } from './Panel';
-import type { ApiResult, TokenUsageData, DayUsage } from '../api';
+import type { ApiResult, TokenUsageData, DayUsage, CacheEfficiency } from '../api';
 import { colors } from '../theme';
 
 interface Props { result: ApiResult<TokenUsageData> | null }
@@ -51,6 +51,11 @@ export function TokenUsagePanel({ result }: Props) {
             <Stat label="Est. Cost" value={fmtUsd(data.totalCostUsd)} color={spike?.spike ? '#e53935' : colors.feedback.muted} />
           </div>
 
+          {/* Cache efficiency */}
+          {data.cacheEfficiency && (
+            <CacheEfficiencyRow efficiency={data.cacheEfficiency} />
+          )}
+
           {/* Cost spike detail */}
           {spike?.spike && (
             <div style={{
@@ -82,6 +87,37 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: 18, fontWeight: 700, color }}>{value}</div>
       <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{label}</div>
+    </div>
+  );
+}
+
+/** green ≥ 1.4 | amber 1.0–1.4 | red < 1.0 (writes not amortizing) */
+function ratioColor(ratio: number): string {
+  if (ratio >= 1.4) return colors.feedback.success;
+  if (ratio >= 1.0) return colors.feedback.warning;
+  return colors.feedback.error;
+}
+
+function CacheEfficiencyRow({ efficiency }: { efficiency: CacheEfficiency }) {
+  const { cacheHitRate, cacheReadWriteRatio } = efficiency;
+  const hitPct = `${Math.round(cacheHitRate * 100)}%`;
+  const ratioColor_ = cacheReadWriteRatio !== null ? ratioColor(cacheReadWriteRatio) : colors.feedback.muted;
+  const ratioLabel = cacheReadWriteRatio !== null ? cacheReadWriteRatio.toFixed(1) + '×' : 'n/a';
+
+  return (
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 11 }}>
+      <span style={{ color: 'var(--text-muted)' }}>Cache hit</span>
+      <span style={{ fontWeight: 700, color: colors.data.amber }}>{hitPct}</span>
+      <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>Read/write</span>
+      <span style={{
+        fontWeight: 700,
+        color: ratioColor_,
+        background: ratioColor_ + '22',
+        borderRadius: 8,
+        padding: '1px 6px',
+      }}>
+        {ratioLabel}
+      </span>
     </div>
   );
 }

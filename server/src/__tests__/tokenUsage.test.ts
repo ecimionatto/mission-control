@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { aggregateTokensByDay } from '../modules/tokenUsage';
+import { aggregateTokensByDay, computeCacheHitRate, computeCacheReadWriteRatio } from '../modules/tokenUsage';
 
 const DATE_HINT = '2026-06-01';
 
@@ -70,5 +70,53 @@ describe('aggregateTokensByDay', () => {
     expect(result[DATE_HINT].outputTokens).toBe(0);
     expect(result[DATE_HINT].cacheReadTokens).toBe(0);
     expect(result[DATE_HINT].cacheWriteTokens).toBe(0);
+  });
+});
+
+describe('computeCacheHitRate', () => {
+  it('returns fraction of prompt tokens served from cache', () => {
+    // 200 / (200 + 10 + 100) = 200/310 ≈ 0.645
+    const rate = computeCacheHitRate(200, 10, 100);
+    expect(rate).toBeCloseTo(200 / 310);
+  });
+
+  it('returns 0 when all token counts are zero (no NaN/Infinity)', () => {
+    expect(computeCacheHitRate(0, 0, 0)).toBe(0);
+  });
+
+  it('returns 0 when no cache tokens but there are input tokens', () => {
+    expect(computeCacheHitRate(0, 0, 500)).toBe(0);
+  });
+
+  it('returns 1.0 for all-cache scenario (only cache reads, no writes or input)', () => {
+    expect(computeCacheHitRate(1000, 0, 0)).toBe(1.0);
+  });
+
+  it('returns 0 when cache reads are zero but writes and input exist', () => {
+    expect(computeCacheHitRate(0, 50, 200)).toBe(0);
+  });
+});
+
+describe('computeCacheReadWriteRatio', () => {
+  it('returns reads divided by writes when both are nonzero', () => {
+    // 200 / 10 = 20
+    expect(computeCacheReadWriteRatio(200, 10)).toBe(20);
+  });
+
+  it('returns null when writes are zero (guard divide-by-zero)', () => {
+    expect(computeCacheReadWriteRatio(0, 0)).toBeNull();
+  });
+
+  it('returns null when writes are zero but reads are nonzero', () => {
+    expect(computeCacheReadWriteRatio(500, 0)).toBeNull();
+  });
+
+  it('returns 0 when reads are zero and writes are nonzero', () => {
+    expect(computeCacheReadWriteRatio(0, 100)).toBe(0);
+  });
+
+  it('returns ratio below break-even for under-amortized cache', () => {
+    // 1 read per write — below the 1.4 break-even
+    expect(computeCacheReadWriteRatio(100, 100)).toBe(1.0);
   });
 });

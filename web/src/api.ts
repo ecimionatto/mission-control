@@ -92,6 +92,13 @@ export interface CostSpikeResult {
   ratio: number;
 }
 
+export interface CacheEfficiency {
+  /** Fraction of all prompt tokens served from cache (0–1). */
+  cacheHitRate: number;
+  /** Cache reads per write. null when no writes exist. */
+  cacheReadWriteRatio: number | null;
+}
+
 export interface TokenUsageData {
   days: DayUsage[];
   totalInputTokens: number;
@@ -100,6 +107,7 @@ export interface TokenUsageData {
   totalCacheWriteTokens: number;
   totalCostUsd: number;
   costSpike: CostSpikeResult;
+  cacheEfficiency: CacheEfficiency;
   filesScanned: number;
   note: string;
 }
