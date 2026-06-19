@@ -91,17 +91,21 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   );
 }
 
-/** green ≥ 1.4 | amber 1.0–1.4 | red < 1.0 (writes not amortizing) */
+// Mirrors server CACHE_BREAKEVEN_RATIO (server/src/modules/tokenUsage.ts) — keep in sync.
+const CACHE_BREAKEVEN_RATIO = 1.4; // green at/above: cache writes are amortizing
+const CACHE_AMBER_FLOOR = 1.0;     // amber down to break-even; red below (writes not paying off)
+
+/** green ≥ break-even | amber 1.0–break-even | red < 1.0 (writes not amortizing) */
 function ratioColor(ratio: number): string {
-  if (ratio >= 1.4) return colors.feedback.success;
-  if (ratio >= 1.0) return colors.feedback.warning;
+  if (ratio >= CACHE_BREAKEVEN_RATIO) return colors.feedback.success;
+  if (ratio >= CACHE_AMBER_FLOOR) return colors.feedback.warning;
   return colors.feedback.error;
 }
 
 function CacheEfficiencyRow({ efficiency }: { efficiency: CacheEfficiency }) {
   const { cacheHitRate, cacheReadWriteRatio } = efficiency;
   const hitPct = `${Math.round(cacheHitRate * 100)}%`;
-  const ratioColor_ = cacheReadWriteRatio !== null ? ratioColor(cacheReadWriteRatio) : colors.feedback.muted;
+  const badgeColor = cacheReadWriteRatio !== null ? ratioColor(cacheReadWriteRatio) : colors.feedback.muted;
   const ratioLabel = cacheReadWriteRatio !== null ? cacheReadWriteRatio.toFixed(1) + '×' : 'n/a';
 
   return (
@@ -111,8 +115,8 @@ function CacheEfficiencyRow({ efficiency }: { efficiency: CacheEfficiency }) {
       <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>Read/write</span>
       <span style={{
         fontWeight: 700,
-        color: ratioColor_,
-        background: ratioColor_ + '22',
+        color: badgeColor,
+        background: badgeColor + '22',
         borderRadius: 8,
         padding: '1px 6px',
       }}>
