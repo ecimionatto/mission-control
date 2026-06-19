@@ -10,6 +10,7 @@ import { SubagentsPanel } from './components/SubagentsPanel';
 import { TokenUsagePanel } from './components/TokenUsagePanel';
 import { ResearchPanel } from './components/ResearchPanel';
 import { AiRatioPanel } from './components/AiRatioPanel';
+import { OpsHealthPanel } from './components/OpsHealthPanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -97,7 +98,12 @@ export default function App() {
             <SubagentsPanel result={data?.subagents ?? null} fleetTracing={data?.fleetTracing ?? null} />
           </div>
 
-          {/* Row 4: Research (full width) */}
+          {/* Row 4: Ops Health */}
+          <div style={{ gridColumn: 'span 12' }}>
+            <OpsHealthPanel result={data?.opsHealth ?? null} />
+          </div>
+
+          {/* Row 5: Research (full width) */}
           <div style={{ gridColumn: 'span 12' }}>
             <ResearchPanel result={data?.research ?? null} />
           </div>

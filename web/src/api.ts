@@ -155,6 +155,21 @@ export interface AiRatioData {
   windowDays: number;
 }
 
+export interface SecurityCounts { critical: number; high: number; moderate: number; low: number }
+export interface PipelineFailure { repo: string; workflowName: string; conclusion: string; createdAt: string; url: string }
+export interface TechDebtItem { number: number; title: string; url: string }
+export interface OpsHealthData {
+  generatedAt: string;
+  security: {
+    dependabotAlerts: Record<string, SecurityCounts>;
+    npmAudit: Record<string, SecurityCounts>;
+  };
+  pipelines: { last24hFailures: PipelineFailure[]; last24hFailureCount: number };
+  crashes: Record<string, { last7dCount: number | null; note?: string }>;
+  techDebt: Record<string, { openIssues: number; items: TechDebtItem[] }>;
+  actionable: Array<{ severity: string; type: string; repo: string; summary: string; url?: string }>;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -166,6 +181,7 @@ export interface DashboardData {
   research: ApiResult<ResearchData>;
   aiRatio: ApiResult<AiRatioData>;
   fleetTracing: ApiResult<FleetTracingData>;
+  opsHealth: ApiResult<OpsHealthData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';
