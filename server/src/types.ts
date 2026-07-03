@@ -161,6 +161,10 @@ export interface AiRatioData {
   windowDays: number;
 }
 
+export interface ConfigData {
+  repos: string[];
+}
+
 export interface SecurityCounts { critical: number; high: number; moderate: number; low: number }
 export interface PipelineFailure { repo: string; workflowName: string; conclusion: string; createdAt: string; url: string }
 export interface TechDebtItem { number: number; title: string; url: string }

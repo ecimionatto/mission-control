@@ -11,6 +11,7 @@ import { fetchResearch } from './modules/research';
 import { fetchAiRatio } from './modules/aiRatio';
 import { fetchFleetTracing } from './modules/fleetTracing';
 import { fetchOpsHealth } from './modules/opsHealth';
+import { getServerConfig } from './modules/config';
 
 const PORT = parseInt(process.env.PORT ?? '4317', 10);
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN;
@@ -81,8 +82,10 @@ app.get('/api/all', async (_req, res) => {
       modules.fleetTracing(),
       modules.opsHealth(),
     ]);
-  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth });
+  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth, config: getServerConfig() });
 });
+
+app.get('/api/config', (_req, res) => res.json(getServerConfig()));
 
 app.get('/api/agent-health', async (_req, res) => res.json(await modules.agentHealth()));
 app.get('/api/prs', async (_req, res) => res.json(await modules.prs()));

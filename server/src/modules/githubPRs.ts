@@ -1,7 +1,18 @@
 import { shellJson } from '../utils/shell';
 import { makeOk, makeErr, PullRequest, Result } from '../types';
 
-const DEFAULT_REPOS = ['ecimionatto/daily-train-app', 'ecimionatto/crescendo-app'];
+const DEFAULT_REPOS: string[] = [];
+
+export function getConfiguredRepos(): string[] {
+  const raw = process.env.REPOS?.trim() ?? '';
+  if (!raw) {
+    if (DEFAULT_REPOS.length === 0) {
+      console.warn('[mission-control] REPOS is not configured; set REPOS=owner/repo1,owner/repo2 in .env');
+    }
+    return DEFAULT_REPOS;
+  }
+  return raw.split(',').map(r => r.trim()).filter(Boolean);
+}
 
 // Raw shapes returned by gh CLI
 interface GhCheck {
@@ -59,7 +70,7 @@ async function fetchRepoPRs(repo: string, state: 'open' | 'merged'): Promise<Pul
 }
 
 export async function fetchPRs(): Promise<Result<PullRequest[]>> {
-  const repos = (process.env.REPOS ?? DEFAULT_REPOS.join(',')).split(',').map(r => r.trim()).filter(Boolean);
+  const repos = getConfiguredRepos();
 
   try {
     const results = await Promise.all(

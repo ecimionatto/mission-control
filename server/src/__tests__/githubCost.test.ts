@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { estimateCostFromRuns } from '../modules/githubCost';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { estimateCostFromRuns, resolveGithubBillingOwner } from '../modules/githubCost';
 import type { WorkflowRun } from '../types';
 
 function makeRun(durationSeconds: number | null): WorkflowRun {
@@ -45,5 +45,44 @@ describe('estimateCostFromRuns', () => {
     // 1 run × 7s ≈ 0.117 min × $0.008 = $0.000933 → rounds to $0
     const result = estimateCostFromRuns([makeRun(7)]);
     expect(result.estimatedUsdCost).toBe(0);
+  });
+});
+
+describe('resolveGithubBillingOwner', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('returns GH_BILLING_OWNER when set (no shell call)', async () => {
+    vi.stubEnv('GH_BILLING_OWNER', 'myorg');
+    delete process.env.REPOS;
+    const mockShell = vi.fn();
+    const owner = await resolveGithubBillingOwner(mockShell as never);
+    expect(owner).toBe('myorg');
+    expect(mockShell).not.toHaveBeenCalled();
+  });
+
+  it('derives owner from first REPOS entry when GH_BILLING_OWNER is unset', async () => {
+    delete process.env.GH_BILLING_OWNER;
+    vi.stubEnv('REPOS', 'myorg/repo1,otherorg/repo2');
+    const mockShell = vi.fn();
+    const owner = await resolveGithubBillingOwner(mockShell as never);
+    expect(owner).toBe('myorg');
+    expect(mockShell).not.toHaveBeenCalled();
+  });
+
+  it('falls back to gh api user login when both envs are unset', async () => {
+    delete process.env.GH_BILLING_OWNER;
+    delete process.env.REPOS;
+    const mockShell = vi.fn().mockResolvedValue({ ok: true, data: { login: 'ghuser' } });
+    const owner = await resolveGithubBillingOwner(mockShell as never);
+    expect(owner).toBe('ghuser');
+    expect(mockShell).toHaveBeenCalledWith('gh', ['api', 'user'], 10_000);
+  });
+
+  it('returns null when all methods fail', async () => {
+    delete process.env.GH_BILLING_OWNER;
+    delete process.env.REPOS;
+    const mockShell = vi.fn().mockResolvedValue({ ok: false, error: 'no auth' });
+    const owner = await resolveGithubBillingOwner(mockShell as never);
+    expect(owner).toBeNull();
   });
 });

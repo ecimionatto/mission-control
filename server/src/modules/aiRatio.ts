@@ -5,11 +5,11 @@ import { makeOk, makeErr, Result, AiRatioData } from '../types';
 // Trailer-based detection UNDERCOUNTS by ~15-20%: humans often use AI without
 // committing the Co-Authored-By trailer. This metric is a floor, not exact.
 
-const REPOS = [
-  '/home/ecimio/daily-train-app',
-  '/home/ecimio/crescendo-app',
-  '/home/ecimio/mission-control',
-];
+export function getLocalRepos(): string[] {
+  const raw = process.env.MC_LOCAL_REPOS?.trim() ?? '';
+  if (!raw) return [];
+  return raw.split(',').map(r => r.trim()).filter(Boolean);
+}
 
 const WINDOW_DAYS = 30;
 
@@ -71,7 +71,11 @@ async function fetchRepoRatio(repoPath: string): Promise<{ repo: string; total: 
 
 export async function fetchAiRatio(): Promise<Result<AiRatioData>> {
   try {
-    const results = await Promise.all(REPOS.map(fetchRepoRatio));
+    const repoPaths = getLocalRepos();
+    if (repoPaths.length === 0) {
+      return makeOk({ repos: [], overall: { total: 0, aiAuthored: 0, ratio: 0 }, windowDays: WINDOW_DAYS });
+    }
+    const results = await Promise.all(repoPaths.map(fetchRepoRatio));
     const repos = results.filter((r): r is NonNullable<typeof r> => r !== null);
     const totals = repos.reduce(
       (acc, r) => ({ total: acc.total + r.total, aiAuthored: acc.aiAuthored + r.aiAuthored }),

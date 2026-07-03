@@ -22,13 +22,41 @@ export function estimateCostFromRuns(runs: WorkflowRun[]): { estimatedUsdCost: n
   return { estimatedUsdCost, totalMinutes: Math.round(totalMinutes) };
 }
 
+export async function resolveGithubBillingOwner(
+  shellFn: typeof shellJson = shellJson
+): Promise<string | null> {
+  // 1. GH_BILLING_OWNER env var
+  const fromEnv = process.env.GH_BILLING_OWNER?.trim();
+  if (fromEnv) return fromEnv;
+
+  // 2. First entry of REPOS env var (take owner part of owner/repo)
+  const reposEnv = process.env.REPOS?.trim();
+  if (reposEnv) {
+    const firstRepo = reposEnv.split(',')[0]?.trim();
+    if (firstRepo) {
+      const owner = firstRepo.split('/')[0];
+      if (owner) return owner;
+    }
+  }
+
+  // 3. Shell call to `gh api user`
+  const result = await shellFn<{ login: string }>('gh', ['api', 'user'], 10_000);
+  if (result.ok && result.data?.login) return result.data.login;
+
+  return null;
+}
+
 export async function fetchCost(): Promise<Result<CostData>> {
-  // Try the user billing endpoint (may be 410)
-  const apiResult = await shellJson<BillingResponse>(
-    'gh',
-    ['api', '/users/ecimionatto/settings/billing/actions'],
-    10_000
-  );
+  const owner = await resolveGithubBillingOwner();
+
+  // If owner is null, skip the API call and go directly to estimate fallback
+  const apiResult = owner
+    ? await shellJson<BillingResponse>(
+        'gh',
+        ['api', `/users/${owner}/settings/billing/actions`],
+        10_000
+      )
+    : { ok: false as const, error: 'No billing owner resolved' };
 
   if (apiResult.ok && apiResult.data?.total_minutes_used !== undefined) {
     return makeOk({

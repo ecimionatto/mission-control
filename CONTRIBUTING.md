@@ -47,3 +47,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ## Pull requests
 
 Open a PR against `main`. Include a short description and a test plan.
+
+## External adapters welcome
+
+Panels and adapters for other agent frameworks (OpenClaw, Codex, Amp, and others) are especially welcome. If your agent produces data in a format this dashboard can surface, open a PR with a new module + panel pair.
