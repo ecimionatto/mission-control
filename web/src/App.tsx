@@ -100,7 +100,7 @@ export default function App() {
 
           {/* Row 4: Ops Health */}
           <div style={{ gridColumn: 'span 12' }}>
-            <OpsHealthPanel result={data?.opsHealth ?? null} />
+            <OpsHealthPanel result={data?.opsHealth ?? null} repos={data?.config?.repos ?? []} />
           </div>
 
           {/* Row 5: Research (full width) */}

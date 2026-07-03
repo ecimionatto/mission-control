@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseGitLog, isAiAuthored, computeAiRatio } from '../modules/aiRatio';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { parseGitLog, isAiAuthored, computeAiRatio, getLocalRepos } from '../modules/aiRatio';
 
 describe('parseGitLog', () => {
   it('returns empty array for empty stdout', () => {
@@ -172,5 +172,34 @@ describe('computeAiRatio', () => {
   it('handles single human commit', () => {
     const commits = [{ hash: 'a', authorEmail: 'human@example.com', body: 'fix: typo' }];
     expect(computeAiRatio(commits)).toEqual({ total: 1, aiAuthored: 0, ratio: 0 });
+  });
+});
+
+describe('getLocalRepos', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('returns parsed paths when MC_LOCAL_REPOS is set to two paths', () => {
+    vi.stubEnv('MC_LOCAL_REPOS', '/home/user/repo1,/home/user/repo2');
+    expect(getLocalRepos()).toEqual(['/home/user/repo1', '/home/user/repo2']);
+  });
+
+  it('returns empty array when MC_LOCAL_REPOS is not set', () => {
+    delete process.env.MC_LOCAL_REPOS;
+    expect(getLocalRepos()).toEqual([]);
+  });
+
+  it('trims whitespace from paths', () => {
+    vi.stubEnv('MC_LOCAL_REPOS', '  /home/user/repo1  ,  /home/user/repo2  ');
+    expect(getLocalRepos()).toEqual(['/home/user/repo1', '/home/user/repo2']);
+  });
+
+  it('returns empty array when MC_LOCAL_REPOS is empty string', () => {
+    vi.stubEnv('MC_LOCAL_REPOS', '');
+    expect(getLocalRepos()).toEqual([]);
+  });
+
+  it('filters out blank entries from paths with consecutive commas', () => {
+    vi.stubEnv('MC_LOCAL_REPOS', '/home/user/repo1,,/home/user/repo2');
+    expect(getLocalRepos()).toEqual(['/home/user/repo1', '/home/user/repo2']);
   });
 });

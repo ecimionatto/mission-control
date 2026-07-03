@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { deriveCiStatus, transformPR } from '../modules/githubPRs';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { deriveCiStatus, transformPR, getConfiguredRepos } from '../modules/githubPRs';
 import { transformWorkflowRun } from '../modules/githubWorkflows';
 
 describe('deriveCiStatus', () => {
@@ -98,5 +98,24 @@ describe('transformWorkflowRun', () => {
   it('sets durationSeconds null for invalid dates', () => {
     const run = transformWorkflowRun({ ...raw, createdAt: '', updatedAt: '' }, 'ecimionatto/test');
     expect(run.durationSeconds).toBeNull();
+  });
+});
+
+describe('getConfiguredRepos (githubPRs)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('returns parsed repos when REPOS env is set', () => {
+    vi.stubEnv('REPOS', 'myorg/repo1,myorg/repo2');
+    expect(getConfiguredRepos()).toEqual(['myorg/repo1', 'myorg/repo2']);
+  });
+
+  it('returns empty array when REPOS is not set', () => {
+    delete process.env.REPOS;
+    expect(getConfiguredRepos()).toEqual([]);
+  });
+
+  it('trims whitespace from entries', () => {
+    vi.stubEnv('REPOS', '  myorg/repo1  ,  myorg/repo2  ');
+    expect(getConfiguredRepos()).toEqual(['myorg/repo1', 'myorg/repo2']);
   });
 });

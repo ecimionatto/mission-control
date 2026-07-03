@@ -3,9 +3,10 @@ import { Panel, Row, Dot, Badge } from './Panel';
 import type { ApiResult, OpsHealthData, SecurityCounts } from '../api';
 import { colors } from '../theme';
 
-interface Props { result: ApiResult<OpsHealthData> | null }
-
-const REPOS = ['daily-train-app', 'crescendo-app'] as const;
+interface Props {
+  result: ApiResult<OpsHealthData> | null;
+  repos: string[];
+}
 
 function securityColor(counts: SecurityCounts): string {
   if (counts.critical > 0) return colors.feedback.error;
@@ -33,7 +34,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function OpsHealthPanel({ result }: Props) {
+export function OpsHealthPanel({ result, repos }: Props) {
   const loading = result === null;
   const error = result && !result.ok ? result.error : undefined;
   const data = result?.ok ? result.data : null;
@@ -46,14 +47,19 @@ export function OpsHealthPanel({ result }: Props) {
 
   return (
     <Panel title="Ops Health" fetchedAt={result?.fetchedAt} error={error} loading={loading} badge={generatedBadge}>
-      {data && (
+      {data && repos.length === 0 && (
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '8px 0' }}>
+          No repos configured — set REPOS in .env
+        </div>
+      )}
+      {data && repos.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
           {/* Security — Dependabot */}
           <Row>
             <SectionLabel>Dependabot</SectionLabel>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-              {REPOS.map(repo => {
+              {repos.map(repo => {
                 const counts = data.security.dependabotAlerts[repo] ?? { critical: 0, high: 0, moderate: 0, low: 0 };
                 const color = securityColor(counts);
                 return (
@@ -73,7 +79,7 @@ export function OpsHealthPanel({ result }: Props) {
           <Row>
             <SectionLabel>npm audit</SectionLabel>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-              {REPOS.map(repo => {
+              {repos.map(repo => {
                 const counts = data.security.npmAudit[repo] ?? { critical: 0, high: 0, moderate: 0, low: 0 };
                 const color = securityColor(counts);
                 return (
@@ -109,7 +115,7 @@ export function OpsHealthPanel({ result }: Props) {
           <Row>
             <SectionLabel>Crashes</SectionLabel>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-              {REPOS.map(repo => {
+              {repos.map(repo => {
                 const crash = data.crashes[repo];
                 const count = crash?.last7dCount;
                 return (
@@ -131,7 +137,7 @@ export function OpsHealthPanel({ result }: Props) {
           <Row style={{ borderBottom: 'none' }}>
             <SectionLabel>Tech Debt</SectionLabel>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-              {REPOS.map(repo => {
+              {repos.map(repo => {
                 const debt = data.techDebt[repo];
                 const count = debt?.openIssues ?? 0;
                 return (

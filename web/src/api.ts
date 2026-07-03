@@ -1,5 +1,9 @@
 // Types mirror server/src/types.ts — kept in sync manually.
 
+export interface ConfigData {
+  repos: string[];
+}
+
 export type ApiResult<T> =
   | { ok: true; data: T; fetchedAt: string }
   | { ok: false; error: string; fetchedAt: string };
@@ -182,6 +186,7 @@ export interface DashboardData {
   aiRatio: ApiResult<AiRatioData>;
   fleetTracing: ApiResult<FleetTracingData>;
   opsHealth: ApiResult<OpsHealthData>;
+  config: ConfigData;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';

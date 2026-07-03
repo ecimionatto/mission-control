@@ -72,6 +72,28 @@ All settings are environment variables. Copy `.env.example` to `.env` to get sta
 | `MC_REPORTS_DIR` | `~/clawbot/reports` | Directory containing your agent's `*.md` report files |
 | `MC_CLAUDE_PROJECT_DIR` | _(required)_ | Path to your Claude Code project dir with `*.jsonl` files |
 | `MC_WORKER_LOG_GLOB` | `/tmp/*-worker.log,/tmp/tf-watch.log` | Comma-separated glob patterns for worker log files |
+| `MC_LOCAL_REPOS` | _(empty)_ | Comma-separated absolute paths to local git repos for AI authorship ratio |
+| `GH_BILLING_OWNER` | _(derived)_ | GitHub owner for billing API; derived from `REPOS` if unset |
+
+## For other agents
+
+Six steps to adopt Mission Control in your own agent setup:
+
+- **Point `REPOS`** at your agent's GitHub repos: `REPOS=myorg/api,myorg/mobile`
+- **Set `MC_CLAUDE_PROJECT_DIR`** to your Claude Code project directory (`~/.claude/projects/<slug>`)
+- **Set `MC_LOCAL_REPOS`** to comma-separated absolute paths of your local git repos (powers the AI authorship ratio panel)
+- **Set `GH_BILLING_OWNER`** to your GitHub org/user (or leave unset — it's derived from `REPOS`)
+- **Add a panel**: drop a module in `server/src/modules/` and a React component in `web/src/components/` (see CONTRIBUTING.md)
+- **Framework-agnostic**: any agent that authenticates with `gh` CLI and writes markdown reports works — not just Claude Code
+
+## Optional authentication
+
+If `DASHBOARD_TOKEN` is set, the web app shows a password dialog that stores the token in `localStorage`. The server accepts it as:
+
+- `Authorization: Bearer <token>` header
+- `X-Dashboard-Token: <token>` header
+
+The dashboard is **LAN-only by design** — do not expose port 4317 to the internet.
 
 ### Wiring it to your agent setup
 
@@ -97,15 +119,6 @@ All settings are environment variables. Copy `.env.example` to `.env` to get sta
    ```
    MC_WORKER_LOG_GLOB=/tmp/*-worker.log,/tmp/my-agent.log
    ```
-
-## Optional authentication
-
-If `DASHBOARD_TOKEN` is set, the web app shows a password dialog that stores the token in `localStorage`. The server accepts it as:
-
-- `Authorization: Bearer <token>` header
-- `X-Dashboard-Token: <token>` header
-
-The dashboard is **LAN-only by design** — do not expose port 4317 to the internet.
 
 ## Firewall
 
