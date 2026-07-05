@@ -175,3 +175,26 @@ export interface OpsHealthData {
   techDebt: Record<string, { openIssues: number; items: TechDebtItem[] }>;
   actionable: Array<{ severity: string; type: string; repo: string; summary: string; url?: string }>;
 }
+
+export type KanbanLane = 'blocked' | 'parked' | 'review' | 'mergeable' | 'in_flight' | 'done';
+
+export interface KanbanCard {
+  id: string;
+  title: string;
+  lane: KanbanLane;
+  repo?: string;
+  prNumber?: number;
+  prUrl?: string;
+  ciStatus?: 'success' | 'failure' | 'pending' | 'none' | 'unknown';
+  blockedReason?: string;
+  isConstraint?: boolean;
+  updatedAt?: string;
+}
+
+export interface KanbanData {
+  cards: KanbanCard[];
+  constraintLane: KanbanLane;
+  constraintNote: string;
+  generatedAt: string;
+  queueFileFound: boolean;
+}

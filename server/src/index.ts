@@ -11,6 +11,7 @@ import { fetchResearch } from './modules/research';
 import { fetchAiRatio } from './modules/aiRatio';
 import { fetchFleetTracing } from './modules/fleetTracing';
 import { fetchOpsHealth } from './modules/opsHealth';
+import { fetchKanban } from './modules/kanban';
 
 const PORT = parseInt(process.env.PORT ?? '4317', 10);
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN;
@@ -42,6 +43,7 @@ const modules = {
   aiRatio: withCache('aiRatio', fetchAiRatio),
   fleetTracing: withCache('fleetTracing', fetchFleetTracing),
   opsHealth: withCache('opsHealth', fetchOpsHealth),
+  kanban: withCache('kanban', fetchKanban),
 };
 
 const app = express();
@@ -67,7 +69,7 @@ app.use((_req, res, next) => {
 
 // Aggregate endpoint — single round-trip for the dashboard
 app.get('/api/all', async (_req, res) => {
-  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth] =
+  const [agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth, kanban] =
     await Promise.all([
       modules.agentHealth(),
       modules.prs(),
@@ -80,8 +82,9 @@ app.get('/api/all', async (_req, res) => {
       modules.aiRatio(),
       modules.fleetTracing(),
       modules.opsHealth(),
+      modules.kanban(),
     ]);
-  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth });
+  res.json({ agentHealth, prs, workflows, cost, achievements, subagents, tokenUsage, research, aiRatio, fleetTracing, opsHealth, kanban });
 });
 
 app.get('/api/agent-health', async (_req, res) => res.json(await modules.agentHealth()));
@@ -95,6 +98,7 @@ app.get('/api/research', async (_req, res) => res.json(await modules.research())
 app.get('/api/ai-ratio', async (_req, res) => res.json(await modules.aiRatio()));
 app.get('/api/fleet-tracing', async (_req, res) => res.json(await modules.fleetTracing()));
 app.get('/api/ops-health', async (_req, res) => res.json(await modules.opsHealth()));
+app.get('/api/kanban', async (_req, res) => res.json(await modules.kanban()));
 
 // Serve web app in production
 const WEB_DIST = path.join(__dirname, '..', '..', 'web', 'dist');

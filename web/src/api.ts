@@ -170,6 +170,29 @@ export interface OpsHealthData {
   actionable: Array<{ severity: string; type: string; repo: string; summary: string; url?: string }>;
 }
 
+export type KanbanLane = 'blocked' | 'parked' | 'review' | 'mergeable' | 'in_flight' | 'done';
+
+export interface KanbanCard {
+  id: string;
+  title: string;
+  lane: KanbanLane;
+  repo?: string;
+  prNumber?: number;
+  prUrl?: string;
+  ciStatus?: 'success' | 'failure' | 'pending' | 'none' | 'unknown';
+  blockedReason?: string;
+  isConstraint?: boolean;
+  updatedAt?: string;
+}
+
+export interface KanbanData {
+  cards: KanbanCard[];
+  constraintLane: KanbanLane;
+  constraintNote: string;
+  generatedAt: string;
+  queueFileFound: boolean;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -182,6 +205,7 @@ export interface DashboardData {
   aiRatio: ApiResult<AiRatioData>;
   fleetTracing: ApiResult<FleetTracingData>;
   opsHealth: ApiResult<OpsHealthData>;
+  kanban: ApiResult<KanbanData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';

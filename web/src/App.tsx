@@ -11,6 +11,7 @@ import { TokenUsagePanel } from './components/TokenUsagePanel';
 import { ResearchPanel } from './components/ResearchPanel';
 import { AiRatioPanel } from './components/AiRatioPanel';
 import { OpsHealthPanel } from './components/OpsHealthPanel';
+import { KanbanPanel } from './components/KanbanPanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -96,6 +97,11 @@ export default function App() {
           </div>
           <div style={{ gridColumn: 'span 6' }}>
             <SubagentsPanel result={data?.subagents ?? null} fleetTracing={data?.fleetTracing ?? null} />
+          </div>
+
+          {/* Kanban */}
+          <div style={{ gridColumn: 'span 12' }}>
+            <KanbanPanel result={data?.kanban ?? null} />
           </div>
 
           {/* Row 4: Ops Health */}
