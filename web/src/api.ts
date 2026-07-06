@@ -193,6 +193,30 @@ export interface KanbanData {
   queueFileFound: boolean;
 }
 
+export interface SpanCostData {
+  sessions: Array<{
+    project: string;
+    sessionId: string;
+    costUsd: number;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    lastActiveAt: string;
+  }>;
+  byProject: Array<{
+    project: string;
+    costUsd: number;
+    sessionCount: number;
+  }>;
+  budget: {
+    dailyBudgetUsd: number;
+    todayCostUsd: number;
+    pct: number;
+    status: 'ok' | 'warn' | 'critical';
+  };
+  note: string;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -206,6 +230,7 @@ export interface DashboardData {
   fleetTracing: ApiResult<FleetTracingData>;
   opsHealth: ApiResult<OpsHealthData>;
   kanban: ApiResult<KanbanData>;
+  spanCost: ApiResult<SpanCostData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';
