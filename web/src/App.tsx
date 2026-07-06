@@ -8,6 +8,7 @@ import { CostPanel } from './components/CostPanel';
 import { AchievementsPanel } from './components/AchievementsPanel';
 import { SubagentsPanel } from './components/SubagentsPanel';
 import { TokenUsagePanel } from './components/TokenUsagePanel';
+import { SpanCostPanel } from './components/SpanCostPanel';
 import { ResearchPanel } from './components/ResearchPanel';
 import { AiRatioPanel } from './components/AiRatioPanel';
 import { OpsHealthPanel } from './components/OpsHealthPanel';
@@ -81,6 +82,11 @@ export default function App() {
           </div>
           <div style={{ gridColumn: 'span 3' }}>
             <TokenUsagePanel result={data?.tokenUsage ?? null} />
+          </div>
+
+          {/* Span Cost — per-session cost attribution + budget gauge */}
+          <div style={{ gridColumn: 'span 6' }}>
+            <SpanCostPanel result={data?.spanCost ?? null} />
           </div>
 
           {/* Row 2: PRs + Workflows */}

@@ -198,3 +198,27 @@ export interface KanbanData {
   generatedAt: string;
   queueFileFound: boolean;
 }
+
+export interface SpanCostData {
+  sessions: Array<{
+    project: string;        // friendly label
+    sessionId: string;      // JSONL filename without .jsonl
+    costUsd: number;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    lastActiveAt: string;   // file mtime ISO
+  }>;
+  byProject: Array<{
+    project: string;
+    costUsd: number;
+    sessionCount: number;
+  }>;
+  budget: {
+    dailyBudgetUsd: number;
+    todayCostUsd: number;
+    pct: number;
+    status: 'ok' | 'warn' | 'critical';
+  };
+  note: string;
+}
