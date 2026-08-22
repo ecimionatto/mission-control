@@ -12,6 +12,7 @@ import { ResearchPanel } from './components/ResearchPanel';
 import { AiRatioPanel } from './components/AiRatioPanel';
 import { OpsHealthPanel } from './components/OpsHealthPanel';
 import { KanbanPanel } from './components/KanbanPanel';
+import { PipelinePanel } from './components/PipelinePanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -69,6 +70,11 @@ export default function App() {
         )}
 
         <div className="mc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 12 }}>
+          {/* Production line — ToC pipeline with constraint detection */}
+          <div style={{ gridColumn: 'span 12' }}>
+            <PipelinePanel result={data?.pipeline ?? null} />
+          </div>
+
           {/* Row 1: Agent Health, Cost, AI Ratio, Token Usage */}
           <div style={{ gridColumn: 'span 3' }}>
             <AgentHealthPanel result={data?.agentHealth ?? null} />

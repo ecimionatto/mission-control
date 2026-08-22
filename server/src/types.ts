@@ -198,3 +198,34 @@ export interface KanbanData {
   generatedAt: string;
   queueFileFound: boolean;
 }
+
+export type PipelineStage =
+  | "research" | "intake" | "ready" | "dev"
+  | "review" | "ci" | "testflight" | "appstore";
+
+export interface StageWip {
+  stage: PipelineStage;
+  label: string;
+  wip: number;
+  limit: number;       // WIP limit; -1 = unlimited
+  isConstraint: boolean;
+  detail: string;      // e.g. "DT build 41 — 8 days old"
+  status: "ok" | "warn" | "critical";
+}
+
+export interface ComputeConstraint {
+  name: string;    // "CI Budget", "Token Quota", "EAS Build"
+  value: string;   // human-readable current value
+  limit: string;   // what the ceiling is
+  pct: number;     // 0-100 utilization %
+  status: "ok" | "warn" | "critical";
+}
+
+export interface PipelineData {
+  stages: StageWip[];
+  constraintStage: PipelineStage;
+  constraintNote: string;
+  computeConstraints: ComputeConstraint[];
+  throughput7d: number;   // PRs merged in last 7 days across all repos
+  generatedAt: string;
+}

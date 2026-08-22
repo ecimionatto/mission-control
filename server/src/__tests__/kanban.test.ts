@@ -44,16 +44,21 @@ const FIXTURE_PARKED = `
 - _(none active)_
 `;
 
+// Dates computed relative to now so the "within 7 days" assertions don't rot.
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 const FIXTURE_DONE = `
 ### 🟡 PARKED — waiting on Edson on-device sign-off
 
 | PR | Repo | What's needed |
 |----|------|--------------|
-| **DT #72** | daily-train-app | **MERGED by Edson himself 2026-07-04 09:02 EDT** — some detail. Done. |
+| **DT #72** | daily-train-app | **MERGED by Edson himself ${daysAgoIso(1)} 09:02 EDT** — some detail. Done. |
 
 ## TICK LOG
 
-- 2026-07-03 08:46 EDT — Tick: **MERGED DT #71** main 03502fa. Ping msg 1906.
+- ${daysAgoIso(2)} 08:46 EDT — Tick: **MERGED DT #71** main 03502fa. Ping msg 1906.
 
 ## IN-FLIGHT WORKERS
 

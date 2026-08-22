@@ -193,6 +193,37 @@ export interface KanbanData {
   queueFileFound: boolean;
 }
 
+export type PipelineStage =
+  | 'research' | 'intake' | 'ready' | 'dev'
+  | 'review' | 'ci' | 'testflight' | 'appstore';
+
+export interface StageWip {
+  stage: PipelineStage;
+  label: string;
+  wip: number;
+  limit: number;       // WIP limit; -1 = unlimited
+  isConstraint: boolean;
+  detail: string;
+  status: 'ok' | 'warn' | 'critical';
+}
+
+export interface ComputeConstraint {
+  name: string;
+  value: string;
+  limit: string;
+  pct: number;     // 0-100 utilization %
+  status: 'ok' | 'warn' | 'critical';
+}
+
+export interface PipelineData {
+  stages: StageWip[];
+  constraintStage: PipelineStage;
+  constraintNote: string;
+  computeConstraints: ComputeConstraint[];
+  throughput7d: number;   // PRs merged in last 7 days across all repos
+  generatedAt: string;
+}
+
 export interface DashboardData {
   agentHealth: ApiResult<AgentHealthData>;
   prs: ApiResult<PullRequest[]>;
@@ -206,6 +237,7 @@ export interface DashboardData {
   fleetTracing: ApiResult<FleetTracingData>;
   opsHealth: ApiResult<OpsHealthData>;
   kanban: ApiResult<KanbanData>;
+  pipeline?: ApiResult<PipelineData>;
 }
 
 const TOKEN_KEY = 'mc_dashboard_token';
@@ -230,4 +262,11 @@ export async function fetchDashboard(): Promise<DashboardData> {
   if (res.status === 401) throw new Error('401');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<DashboardData>;
+}
+
+export async function fetchPipeline(): Promise<ApiResult<PipelineData>> {
+  const res = await fetch('/api/pipeline', { headers: authHeaders() });
+  if (res.status === 401) throw new Error('401');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<ApiResult<PipelineData>>;
 }
